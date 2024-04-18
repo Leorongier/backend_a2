@@ -126,96 +126,39 @@ def search():
         enriched_results.append(result)
     return jsonify(enriched_results)
 
-def fetch_recommendations(user_id):
-    # Query to fetch movie recommendations based on user similarity via BigQuery
-    client = bigquery.Client.from_service_account_json(service_account_path)
 
-    query = f"""
-    DECLARE target_user_id INT64;
-    SET target_user_id = {user_id};
-
-    -- Select user ratings, compute norms and dot products, calculate cosine similarities, and fetch recommendations
-    WITH user_ratings AS (
-      SELECT userId, movieId, rating_im AS rating
-      FROM `assignement-1-416515.ratings_a2.Ratings_a2`
-    ),
-    user_norms AS (
-      SELECT userId, SQRT(SUM(POW(rating, 2))) AS norm
-      FROM user_ratings
-      GROUP BY userId
-    ),
-    dot_product AS (
-      SELECT 
-        a.userId AS user1,
-        b.userId AS user2,
-        SUM(a.rating * b.rating) AS dot_product
-      FROM user_ratings a
-      JOIN user_ratings b ON a.movieId = b.movieId
-      WHERE a.userId < b.userId  -- Avoid counting pairs twice
-      GROUP BY a.userId, b.userId
-    ),
-    cosine_similarity AS (
-      SELECT 
-        user1,
-        user2,
-        dot_product / (ua.norm * ub.norm) AS similarity
-      FROM dot_product dp
-      JOIN user_norms ua ON dp.user1 = ua.userId
-      JOIN user_norms ub ON dp.user2 = ub.userId
-    ),
-    ranked_similarity AS (
-      SELECT
-        user1 AS target_user_id,
-        user2 AS similar_user_id,
-        similarity,
-        ROW_NUMBER() OVER (PARTITION BY user1 ORDER BY similarity DESC) AS similarity_rank
-      FROM cosine_similarity
-    ),
-    similar_users AS (
-      SELECT 
-        ARRAY_AGG(similar_user_id) AS similar_user_ids
-      FROM 
-        ranked_similarity
-      WHERE 
-        target_user_id = target_user_id  -- Utilize the parameter defined
-      AND 
-        similarity_rank <= 10
-    ),
-    SimilarUsers AS (
-      SELECT
-        user_ratings.userId,
-        user_ratings.movieId,
-        user_ratings.rating
-      FROM
-        user_ratings
-      JOIN
-        similar_users
-      ON
-        user_ratings.userId IN UNNEST(similar_user_ids)
-    )
-    SELECT 
-      movieId, 
-      rating AS predicted_rating
-    FROM 
-      SimilarUsers
-    """
-    query_job = client.query(query)
-    recommendations_df = query_job.to_dataframe()
-    return recommendations_df
-
-@app.route('/recommendations', methods=['GET'])
+@app.route('/recommendations', methods=['POST'])
 def get_recommendations():
-    user_id = request.args.get('user_id')
-    if user_id:
-        try:
-            recommendations_df = fetch_recommendations(user_id)
-            recommendations_json = recommendations_df.head(5).to_json(orient='records')
-            return recommendations_json
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    else:
-        return jsonify({"error": "User ID is required"}), 400
+    # Réception du corps JSON de la requête POST.
+    data = request.get_json()
+    preferred_movies = data.get('preferred_movies')
+
+    # Vérification que la liste des films préférés est présente.
+    if not preferred_movies:
+        return jsonify({"error": "Preferred movies list is required"}), 400
+
+    # Création de la requête SQL pour obtenir des recommandations.
+    preferred_movies_list = ', '.join([str(movie_id) for movie_id in preferred_movies])
+    recommendation_query = f"""
+    SELECT 
+        movieId, 
+        predicted_rating_im_confidence  # Utilisation du bon nom de colonne
+    FROM
+        ML.RECOMMEND(MODEL `assignement-1-416515.ratings_a2.first-MF-model`,
+        (SELECT movieId FROM UNNEST([{preferred_movies_list}]) AS movieId))
+    WHERE predicted_rating_im_confidence > 0  # Utilisation du bon nom de colonne
+    ORDER BY predicted_rating_im_confidence DESC  # Utilisation du bon nom de colonne
+    LIMIT 5
+    """
+
+    # Exécution de la requête et conversion des résultats en JSON.
+    client = bigquery.Client.from_service_account_json(service_account_path)
+    try:
+        recommendations_df = client.query(recommendation_query).to_dataframe()
+        recommendations = recommendations_df.to_dict(orient='records')
+        return jsonify(recommendations)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=5000)
