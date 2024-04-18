@@ -1,0 +1,8 @@
+flask
+flask-cors
+pandas
+google-cloud-bigquery
+elasticsearch
+tmdbv3api
+requests
+db-dtypes
