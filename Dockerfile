@@ -5,13 +5,13 @@ FROM python:3.9-slim-buster
 WORKDIR /app
 
 # Copy just the requirements.txt first to leverage Docker cache
-COPY Backend/requirements.txt .
+COPY requirements.txt .
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the current directory contents into the container at /app
-COPY Backend/ .
+COPY . .
 
 # Install db-dtypes specifically to check if it's installed properly (for debugging purposes)
 RUN pip install db-dtypes
@@ -27,3 +27,4 @@ ENV FLASK_APP=app.py
 
 # Run the application
 CMD ["flask", "run", "--host", "0.0.0.0", "--port", "8080"]
+
