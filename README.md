@@ -15,6 +15,7 @@
   <li>REST API to serve movie data</li>
   <li>Elasticsearch integration for enhanced search capabilities</li>
   <li>Machine learning-based recommendation system</li>
+  <li>Integration with The Movie Database (TMDB) API for fetching movie details and images</li>
 </ul>
 
 <!-- Technologies Used -->
