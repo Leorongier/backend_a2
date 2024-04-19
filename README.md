@@ -21,9 +21,11 @@
 <!-- Technologies Used -->
 <h2>🛠️ Built With</h2>
 <ul>
-  <li>Flask</li>
-  <li>Python</li>
-  <li>Google Cloud BigQuery</li>
+  <li>Flask - As the web framework to serve API endpoints.</li>
+  <li>Python - For backend scripting.</li>
+  <li>Elasticsearch - For efficient, scalable search capabilities.</li>
+  <li>Google Cloud BigQuery - For handling large datasets and running queries.</li>
+  <li>The Movie Database (TMDB) API - For accessing detailed movie information and images.</li>
 </ul>
 
 <!-- Getting Started -->
