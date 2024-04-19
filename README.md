@@ -7,7 +7,7 @@
 <!-- Live API Endpoint -->
 <h2>🌐 Live API Endpoint</h2>
 <p>Access the live API here:</p>
-<p><a href="#your-backend-api-link" target="_blank">MovieQuest Backend API</a></p>
+<p><a href="https://backend-a2-2-62asncaisq-oa.a.run.app" target="_blank">MovieQuest Frontend</a></p>
 
 <!-- Features -->
 <h2>🚀 Features</h2>
