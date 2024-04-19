@@ -2,7 +2,7 @@
 <h1 align="center">Movie Recommendation System Backend 🔧</h1>
 
 <!-- Description -->
-<p>The backbone of MovieQuest, this backend server handles all the data processing, from fetching movie details to generating personalized recommendations using machine learning algorithms, all served through a robust RESTful API.</p>
+<p>The backbone of MovieQuest, this backend server handles all the data processing, from fetching movie details to generating personalized recommendations using machine learning algorithms, all served through a robust restful API.</p>
 
 <!-- Live API Endpoint -->
 <h2>🌐 Live API Endpoint</h2>
